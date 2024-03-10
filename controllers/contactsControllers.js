@@ -34,6 +34,7 @@ export const createContact = ctrlWrapper(async (req, res) => {
   res.status(201).json(result);
 });
 
+
 export const updateContactById = ctrlWrapper(async (req, res) => {
   const { id } = req.params;
 
@@ -47,6 +48,8 @@ export const updateContactById = ctrlWrapper(async (req, res) => {
   }
   res.status(200).json(result);
 });
+
+
 
 export const updateContactStatus = ctrlWrapper(async (req, res) => {
   const { id } = req.params;
