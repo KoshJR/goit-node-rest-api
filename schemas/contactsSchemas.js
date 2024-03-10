@@ -5,8 +5,6 @@ export const createContactSchema = Joi.object({
   email: Joi.string().required(),
   phone: Joi.string().required(),
   favorite: Joi.boolean(),
-
-
 });
 
 export const updateContactSchema = Joi.object({
@@ -14,12 +12,7 @@ export const updateContactSchema = Joi.object({
   email: Joi.string(),
   phone: Joi.string(),
   favorite: Joi.boolean(),
-})
-  .or("name", "email", "phone", "favorite")
-  .messages({
-    "object.missing":
-      'At least one of the fields "name", "email", "phone, or "favorite" must be provided',
-  });
+});
 
 export const updateContactStatusSchema = Joi.object({
     favorite: Joi.boolean().required(),
