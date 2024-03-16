@@ -6,6 +6,7 @@ import ctrlWrapper from "../decorators/ctrlWrapper.js";
 
 
 export const getAllContacts = ctrlWrapper(async (req, res) => {
+  
   const result = await contactsService.listContacts();
   res.json(result);
 });
@@ -30,7 +31,8 @@ export const deleteContact = ctrlWrapper(async (req, res) => {
 });
 
 export const createContact = ctrlWrapper(async (req, res) => {
-  const result = await contactsService.addContact(req.body);
+  const { _id: owner } = req.user;
+  const result = await contactsService.addContact({...req.body, owner});
   res.status(201).json(result);
 });
 
