@@ -1,4 +1,8 @@
 import jwt from "jsonwebtoken";
+import fs from "fs/promises";
+import gravatar from "gravatar"
+import path from "path"
+import Jimp from "jimp";
 
 import * as authServices from "../services/authServices.js";
 
@@ -6,16 +10,21 @@ import HttpError from "../helpers/HttpError.js";
 
 import ctrlWrapper from "../decorators/ctrlWrapper.js";
 
+const { JWT_SECRET } = process.env
 
+const avatarPath = path.resolve("public", "avatars");
 
 const register = async (req, res) => {
   const { email } = req.body;
+
   const user = await authServices.findUser({ email });
   if (user) {
     throw HttpError(409, "Email in use");
   }
 
-  const newUser = await authServices.register(req.body);
+  const avatarURL = gravatar.url(email);
+  
+  const newUser = await authServices.register({...req.body, avatarURL});
 
   res.status(201).json({
     user: {
@@ -71,6 +80,26 @@ const logout = async (req, res) => {
   res.status(204).json()
 };
 
+const updateAvatar = async (req, res) => {
+  if (!req.file) {
+    throw HttpError(400, "Avatar file is required")
+  }
+  const { path: oldPath, filename } = req.file;
+  const newPath = path.join(avatarPath, filename);
+  
+
+    const image = await Jimp.read(oldPath)
+    await image.resize(250, 250).writeAsync(newPath)
+    
+    const { _id } = req.user;
+    await authServices.updateUser({ _id }, { avatarURL: `/avatars/${filename}` });
+
+    res.status(200).json({avatarURL: `/avatars/${filename}`})
+    
+  
+
+}
+
 
 
 
@@ -80,4 +109,5 @@ export default {
   login: ctrlWrapper(login),
   logout: ctrlWrapper(logout),
   getCurrent: ctrlWrapper(getCurrent),
+  updateAvatar: ctrlWrapper(updateAvatar)
 };
