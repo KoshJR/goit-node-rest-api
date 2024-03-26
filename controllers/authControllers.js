@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import fs from "fs/promises";
 import gravatar from "gravatar"
+import path from "path"
 import Jimp from "jimp";
-import path from "path";
 
 import * as authServices from "../services/authServices.js";
 
@@ -10,21 +10,21 @@ import HttpError from "../helpers/HttpError.js";
 
 import ctrlWrapper from "../decorators/ctrlWrapper.js";
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET } = process.env
 
-const avatarPath = path.resolve("public", "avatars")
+const avatarPath = path.resolve("public", "avatars");
 
 const register = async (req, res) => {
   const { email } = req.body;
+
   const user = await authServices.findUser({ email });
   if (user) {
     throw HttpError(409, "Email in use");
   }
 
   const avatarURL = gravatar.url(email);
-  console.log(avatarURL);
-
-  const newUser = await authServices.register({ ...req.body, avatarURL });
+  
+  const newUser = await authServices.register({...req.body, avatarURL});
 
   res.status(201).json({
     user: {
@@ -80,27 +80,26 @@ const logout = async (req, res) => {
   res.status(204).json()
 };
 
-const imageResize = async (path) => {
-  const image = await Jimp.read(path);
-  await image.resize(250, 250, Jimp.RESIZE_BICUBIC);
-  await image.writeAsync(path);
-};
-
 const updateAvatar = async (req, res) => {
+  if (!req.file) {
+    throw HttpError(400, "Avatar file is required")
+  }
   const { path: oldPath, filename } = req.file;
-
-  const pathImage = path.join("temp", filename);
-  await imageResize(pathImage);
-
   const newPath = path.join(avatarPath, filename);
-  await fs.rename(oldPath, newPath);
+  
 
-  const avatarURL = path.resolve("avatars", filename);
+    const image = await Jimp.read(oldPath)
+    await image.resize(250, 250).writeAsync(newPath)
+    
+    const { _id } = req.user;
+    await authServices.updateUser({ _id }, { avatarURL: `/avatars/${filename}` });
 
-  const { _id } = req.user;
-  await authServices.updateUser({ _id }, { avatarURL });
-  res.status(200).json({ message: `"avatarURL": ${avatarURL}` });
-};
+    res.status(200).json({avatarURL: `/avatars/${filename}`})
+    
+  
+
+}
+
 
 
 
@@ -110,5 +109,5 @@ export default {
   login: ctrlWrapper(login),
   logout: ctrlWrapper(logout),
   getCurrent: ctrlWrapper(getCurrent),
-  updateAvatar: ctrlWrapper(updateAvatar),
+  updateAvatar: ctrlWrapper(updateAvatar)
 };
