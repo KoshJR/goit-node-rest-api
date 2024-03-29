@@ -85,11 +85,15 @@ const updateAvatar = async (req, res) => {
     throw HttpError(400, "Avatar file is required")
   }
   const { path: oldPath, filename } = req.file;
-  const newPath = path.join(avatarPath, filename);
+  
+  
   
 
-  const image = await Jimp.read(oldPath)
-  await image.resize(250, 250).writeAsync(newPath)
+  const image = await Jimp.read(oldPath);
+  await image.resize(250, 250).writeAsync(oldPath);
+
+
+  const newPath = path.join(avatarPath, filename);
   await fs.rename(oldPath, newPath);
     
   const { _id } = req.user;
